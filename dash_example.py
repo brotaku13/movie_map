@@ -6,6 +6,8 @@ from plotly.graph_objs import *
 
 import networkx as nx
 
+# hello
+
 G = nx.random_geometric_graph(500,0.125)  # creates graph
 
 pos = nx.get_node_attributes(G, 'pos')  # returns Dictionary of attributes keyed by node.
