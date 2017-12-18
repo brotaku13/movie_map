@@ -10,6 +10,8 @@ import networkx as nx
 #hello back
 
 
+# please don't ignore me
+
 G = nx.random_geometric_graph(500,0.125)  # creates graph
 
 pos = nx.get_node_attributes(G, 'pos')  # returns Dictionary of attributes keyed by node.
