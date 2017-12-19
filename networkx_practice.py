@@ -5,7 +5,7 @@ import plotly.offline as py
 from plotly.graph_objs import *
 import networkx as nx
 
-G = nx.balanced_tree(3, 2)
+G = nx.balanced_tree(4, 4)
 
 pos = nx.spring_layout(G)
 #  pos is a dictionary { nodeNumber : ([x, y]), ...}
