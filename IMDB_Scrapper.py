@@ -1,11 +1,14 @@
-import bs4 as bs
+from bs4 import BeautifulSoup
 import urllib.request
 import pandas as pd
+import requests
 
-sauce =  urllib.request.urlopen("http://www.imdb.com/title/tt0092099/").read()
-soup = bs.BeautifulSoup(sauce, "lxml")
+r = requests.get("http://www.imdb.com/title/tt0092099/")
+soup = BeautifulSoup(r.content, "lxml")
 
-body = soup.body
-
-for paragraph in body.find_all("div", class_ = "rec_overview"):
-    print(paragraph.get('href'))
+for links in soup.find_all("div", class_="rec_overview"):
+    link = links.find('a')
+    print(link.get("href"))
+    rating = links.find("div", class_="rating rating-list")
+    print("title")
+    print(rating.title)
