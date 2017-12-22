@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
-from collections import OrderedDict
 
-def get_info(movie_link, rows_deep, count):
+def get_info(movie_link, rows_deep, count, movies_visited):
+
     if(count == rows_deep):
         return
 
@@ -13,9 +13,11 @@ def get_info(movie_link, rows_deep, count):
         # find link
         link = links.find('a')  #relative hyperlink
 
-        # ttcode
+        # get ttcode
         tt_code = link.get('href').split('/')[2]
+        #creates list of all ttCode of recommended movies
         tt_code_list.append(tt_code)
+
 
         # find title
         title = link.next_element['alt']
@@ -27,7 +29,7 @@ def get_info(movie_link, rows_deep, count):
         # find votes
         temp = div.attrs['title']
 
-        # following function finds number between parentheses, replaces the ',' with '' and then turns the number into an int
+        # finds number between parentheses, replaces the ',' with '' and then turns the number into an int
         votes = int(temp[temp.find('(') + 1:temp.find(' ', temp.find('('))].replace(',', ''))
 
         #adds information to a dictionary
@@ -37,28 +39,34 @@ def get_info(movie_link, rows_deep, count):
 
     topThree = {}
 
-    for i in range(-1, -4, -1):  # iterates backwards over list and adds last three to a new dictionary
-        topThree[sorted_movies[i]] = movies[sorted_movies[i]]
+    visit = 0
+    index = len(sorted_movies) - 1
+    while visit < 3 and index > 0:  #visit 3 movies or the whole movies list, whichever comes first.
+        if movies[sorted_movies[index]][1] not in movies_visited:
+            topThree[sorted_movies[index]] = movies[sorted_movies[index]]
+            movies_visited.append(topThree[sorted_movies[index]][1])
+            visit += 1
+        else:
+            print('{} already visited'.format(movies[sorted_movies[index]][0]), end=', ')
+        index -= 1
+    print('')
 
-    print(topThree)
+    print('topThree:', topThree)
 
-    # creates BeautifulSoup objects to be passed into the recursive function
-    count += 1
+    count += 1  # increment count for recursive function
 
-    r1 = requests.get("http://www.imdb.com/title/" + tt_code_list[0])
-    movie1 = BeautifulSoup(r1.content, "lxml")
-    get_info(movie1, rows_deep, count)
-
-    r2 = requests.get("http://www.imdb.com/title/" + tt_code_list[1])
-    movie2 = BeautifulSoup(r2.content, "lxml")
-    get_info(movie2, rows_deep, count)
-
-    r3 = requests.get("http://www.imdb.com/title/" + tt_code_list[2])
-    movie3 = BeautifulSoup(r3.content, "lxml")
-    get_info(movie3, rows_deep, count)
+    for key, value in topThree.items():
+        r1 = requests.get("http://www.imdb.com/title/" + value[1])
+        movie = BeautifulSoup(r1.content, "lxml")
+        if count != 3:
+            print('visiting {}'.format(value))
+        get_info(movie, rows_deep, count, movies_visited)
 
 
 
+
+'''
+keep for testing:
 def main():
 
     r = requests.get("http://www.imdb.com/title/tt0092099/")
@@ -66,11 +74,13 @@ def main():
 
     rows_deep = 3
     count = 0
-
-    get_info(soup, rows_deep, count)
+    movies_visited = []
+    get_info(soup, rows_deep, count, movies_visited)
 
 if __name__ == "__main__":
     main()
+'''
+
 
 
 
