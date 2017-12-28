@@ -58,6 +58,9 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
             #if already in movies_visited list, then print. this is mostly a log function and will be removed later
             print('{} already visited'.format(movies[sorted_movies[index]][0]), end=', ')
 
+            # still want to create connection even if its been visited before
+            G.add_edge(parent_node, movies[sorted_movies[index]][1])
+
         #  go backwards through the sorted movies to find top three
         index -= 1
     print('')
