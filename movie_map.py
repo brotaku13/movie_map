@@ -2,9 +2,9 @@ import dash
 from dash.dependencies import Input, State, Output, Event
 import dash_core_components as dcc
 import dash_html_components as html
-import plotly.offline as py
 from plotly.graph_objs import *
 import networkx as nx
+import IMDB_Scrapper as scraper
 
 def build_network(hyperlink):
     """
@@ -12,8 +12,8 @@ def build_network(hyperlink):
     :param hyperlink: a hyperlink to an IMDB title
     :return: a graph to connect to the dcc.Graph
     """
-    hyperlink = hyperlink.split(' ')
-    G = nx.balanced_tree(int(hyperlink[0]), int(hyperlink[1]))
+
+    G = scraper.scraper()
 
     pos = nx.spring_layout(G)
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}
