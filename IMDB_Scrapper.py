@@ -89,7 +89,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
 
         # build node
         G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2])
-        #attach node to graph
+        # attach node to graph
         G.add_edge(parent_node, movie_specs[1])
 
         # call recursive function
@@ -109,6 +109,7 @@ def create_parent_node(G, soup):
 # keep for testing:
 def scraper():
     G = nx.Graph()
+
     r = requests.get("http://www.imdb.com/title/tt1632708/?ref_=nv_sr_1")
     soup = BeautifulSoup(r.content, "lxml")
     rows_deep = 4
@@ -121,11 +122,9 @@ def scraper():
     movies_visited = []
     get_info(G, soup, rows_deep, count, movies_visited, parent_node_key)
 
+
     return G
-'''
-if __name__ == "__main__":
-    scraper()
-'''
+
 
 
 
