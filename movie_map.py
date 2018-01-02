@@ -43,7 +43,8 @@ def build_network(hyperlink):
         x=[],
         y=[],
         text=[],
-        mode='markers',
+        textposition='bottom',
+        mode='markers+text',
         marker=Marker(
             showscale=False,
             colorscale='Earth',
@@ -52,10 +53,13 @@ def build_network(hyperlink):
             line=dict(width=2))
     )
 
+    node_text = []
     for node in G.nodes():
         x, y = pos[node]
         node_trace['x'].append(x)
         node_trace['y'].append(y)
+        node_text.append(G.node[node]['title'])
+    node_trace['text'] = node_text
 
     fig = Figure(
         data=[edge_trace, node_trace],
@@ -77,7 +81,6 @@ def main():
     """
     app = dash.Dash()
 
-
     app.layout = html.Div([
         html.Div(id='target'),  # div that shows output
         dcc.Input(id='input', type='text', value=''),
@@ -97,7 +100,7 @@ def main():
                                     # State('connecting element', value collected)
         [Event('submit', 'click')])  #connected to the html.Button, callback triggered on action
                                      # Event('connecting_id', action)
-    def make_map(hyperlink): #state variable is the 'value' property from the State in the decorator
+    def make_map(hyperlink):  # state variable is the 'value' property from the State in the decorator
         return build_network(hyperlink)
 
     app.run_server(debug=False)

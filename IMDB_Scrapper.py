@@ -90,7 +90,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
 
         # build node
         G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2])
-        #attach node to graph
+        # attach node to graph
         G.add_edge(parent_node, movie_specs[1])
 
         # call recursive function
@@ -129,6 +129,7 @@ def scraper(hyperlink):
 
     movies_visited = []
     get_info(G, soup, rows_deep, count, movies_visited, parent_node_key)
+
 
     return G
 
