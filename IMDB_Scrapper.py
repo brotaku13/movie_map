@@ -4,6 +4,16 @@ import networkx as nx
 import time
 
 def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
+    '''
+    This is the recursive function that goes into the different movies. it gets called on each movie.
+    :param G: A graph object.
+    :param movie_link: A beautiful soup object.
+    :param rows_deep: the number of levels to go into. Note that As this becomes higher, the run time increases exponentially.
+    :param count: the number of rows deep already visited.
+    :param movies_visited: a list object of movie's tt_codes that have already been visited so that they are not visited again.
+    :param parent_node: the parent node to the movies being visited. part of the Graph Object.
+    :return: void. this function builds the graph object.
+    '''
 
     #  base case
     if(count == rows_deep):
@@ -93,15 +103,15 @@ def create_parent_node(G, soup):
     :return: node_key (str)
     '''
     # insert actual web scraping for parent node
-    G.add_node('tt0092099', title='Top Gun', votes=123456, imdb_score=7.9)
-    return 'tt0092099'
+    G.add_node('tt3501632', title='Top Gun', votes=123456, imdb_score=7.9)
+    return 'tt3501632'
 
 # keep for testing:
 def scraper():
     G = nx.Graph()
-    r = requests.get("http://www.imdb.com/title/tt0092099/")
+    r = requests.get("http://www.imdb.com/title/tt1632708/?ref_=nv_sr_1")
     soup = BeautifulSoup(r.content, "lxml")
-    rows_deep = 3
+    rows_deep = 4
     count = 0
 
     #  need to create a parent node
@@ -114,7 +124,7 @@ def scraper():
     return G
 '''
 if __name__ == "__main__":
-    main()
+    scraper()
 '''
 
 
