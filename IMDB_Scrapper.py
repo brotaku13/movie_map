@@ -112,7 +112,7 @@ def scraper():
 
     r = requests.get("http://www.imdb.com/title/tt1632708/?ref_=nv_sr_1")
     soup = BeautifulSoup(r.content, "lxml")
-    rows_deep = 4
+    rows_deep = 2
     count = 0
 
     #  need to create a parent node
@@ -124,8 +124,6 @@ def scraper():
 
 
     return G
-
-
 
 
 

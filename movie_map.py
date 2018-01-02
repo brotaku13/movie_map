@@ -18,6 +18,7 @@ def build_network(hyperlink):
     pos = nx.spring_layout(G)
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}
 
+    # creating the edges
     edge_trace = Scatter(
         x=[],
         y=[],
@@ -29,6 +30,7 @@ def build_network(hyperlink):
     xvalues = []
     yvalues = []
 
+    # drawing the edges
     for edge in G.edges():  # [(node1, node2), (node3, node4),...]
         x0, y0 = pos[edge[0]]  # pos = { nodeID : [x, y], nodeID : [x, y], ...}
         x1, y1 = pos[edge[1]]
@@ -39,6 +41,7 @@ def build_network(hyperlink):
         edge_trace['x'] += [x0, x1, None]  # adding x and y to scatter plot
         edge_trace['y'] += [y0, y1, None]
 
+    # setting up node drawing
     node_trace = Scatter(
         x=[],
         y=[],
@@ -46,13 +49,14 @@ def build_network(hyperlink):
         textposition='bottom',
         mode='markers+text',
         marker=Marker(
-            showscale=False,
-            colorscale='Earth',
-            reversescale=True,
+            showscale=True,
+            colorscale='Viridis',
+            reversescale=False,
             color=[],
             line=dict(width=2))
     )
 
+    # drawing the nodes
     node_text = []
     for node in G.nodes():
         x, y = pos[node]
@@ -61,6 +65,11 @@ def build_network(hyperlink):
         node_text.append(G.node[node]['title'])
     node_trace['text'] = node_text
 
+    # resizing and nodes based on number of connections
+    for node, adjacencies in enumerate(G.adjacency()):
+        node_trace['marker']['color'].append(len(adjacencies[1]))
+
+    # setting up the figure
     fig = Figure(
         data=[edge_trace, node_trace],
         layout=Layout(
