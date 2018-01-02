@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import networkx as nx
 import time
+import string
 
 def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
     '''
@@ -107,24 +108,50 @@ def create_parent_node(G, soup):
     return 'tt3501632'
 
 # keep for testing:
-def scraper():
+def scraper(hyperlink):
     G = nx.Graph()
-    r = requests.get("http://www.imdb.com/title/tt1632708/?ref_=nv_sr_1")
+
+    user_movie = hyperlink.replace(" ", "+")
+    temp_movie = "iron+man"
+    print(user_movie)
+    movie_link = get_hyperlink(user_movie)
+
+    r = requests.get(movie_link)
     soup = BeautifulSoup(r.content, "lxml")
     rows_deep = 4
     count = 0
 
     #  need to create a parent node
     #  Node(tt028365, 'title': 'original_title', 'votes', 123445, 'score', 7.0)
+    user_movie = "iron+man"
+    get_hyperlink(user_movie)
     parent_node_key = create_parent_node(G, soup)
 
     movies_visited = []
     get_info(G, soup, rows_deep, count, movies_visited, parent_node_key)
 
     return G
+
+def get_hyperlink(movie_name):
+    # need to fix exit code later
+    try:
+        # user_movie = "acyeiouncu"
+        temp_r = requests.get("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + movie_name + "&s=all")
+        temp_soup = BeautifulSoup(temp_r.content, "lxml")
+
+        link = temp_soup.find("td", class_="result_text")
+        link = link.find('a')
+        link = link.get("href")
+        link = "http://www.imdb.com" + link
+        print(link)
+        return link
+
+    except:
+        print("Error : Movie was not found.")
+        exit(0)
 '''
 if __name__ == "__main__":
-    scraper()
+    scraper(hyperlink)
 '''
 
 
