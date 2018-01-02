@@ -13,7 +13,7 @@ def build_network(hyperlink):
     :return: a graph to connect to the dcc.Graph
     """
 
-    G = scraper.scraper()
+    G = scraper.scraper(hyperlink)
 
     pos = nx.spring_layout(G)
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}
