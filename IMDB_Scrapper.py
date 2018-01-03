@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import networkx as nx
 import time
+import string
 
 def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
     '''
@@ -44,8 +45,18 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
         # finds number between parentheses, replaces the ',' with '' and then turns the number into an int
         votes = int(temp[temp.find('(') + 1:temp.find(' ', temp.find('('))].replace(',', ''))
 
+        # gets the short description of the movie
+        try:
+            synopsis = links.find("div", class_="rec-outline")
+            synopsis = synopsis.find("p")
+            synopsis = synopsis.string.replace("\n", "")
+        except Exception as e:
+            print(e)
+            synopsis = "Error reading synopsis."
+        # print(synopsis.text)
+
         #adds information to a dictionary
-        movies[votes] = [title, tt_code, rating]
+        movies[votes] = [title, tt_code, rating, synopsis]
 
     sorted_movies = sorted(movies)  # sorts movies, returns list of movie keys in sorted order
 
@@ -88,15 +99,15 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
             print('visiting {}'.format(movie_specs))
 
         # build node
-        G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2])
-        #attach node to graph
+        G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2], synopsis=movie_specs[3])
+        # attach node to graph
         G.add_edge(parent_node, movie_specs[1])
 
         # call recursive function
         get_info(G, movie, rows_deep, count, movies_visited, movie_specs[1])  # passing in the tt_code as the parent_node
 
 
-def create_parent_node(G, hyperlink, soup):
+def create_parent_node(G, movie_link, soup):
     '''
     This finds and creates the central, parent node and associates it with the graph
     :param G: networkx Graph object
@@ -104,7 +115,7 @@ def create_parent_node(G, hyperlink, soup):
     :return: node_key (str)
     '''
     
-    node_key = hyperlink.split('/')[4]
+    node_key = movie_link.split('/')[4]
 
     keyword = '/title/{}/ratings?ref_=tt_ov_rt'.format(id)
  
@@ -121,29 +132,70 @@ def create_parent_node(G, hyperlink, soup):
     G.add_node(node_key, title, votes, imdb_score)
     return node_key
 
-# keep for testing:
-def scraper():
-    G = nx.Graph()
-    hyeprlink = "http://www.imdb.com/title/tt1632708/?ref_=nv_sr_1"
-    r = requests.get(hyperlink)
-    soup = BeautifulSoup(r.content, "lxml")
-    rows_deep = 4
-    count = 0
 
-    #  need to create a parent node
-    #  Node(tt028365, 'title': 'original_title', 'votes', 123445, 'score', 7.0)
-    parent_node_key = create_parent_node(G, hyperlink ,soup)
+# keep for testing:
+def scraper(hyeprlink):
+    G = nx.Graph()
+
+    # replaces the user entered spaces for + so that the movie can be searched for in imdb
+    user_movie = hyperlink.replace(" ", "+")
+
+    # gest the link of the movie
+    print(user_movie)
+    movie_link = get_hyperlink(user_movie)
+    
+    r = requests.get(movie_link)
+    soup = BeautifulSoup(r.content, "lxml")
+    rows_deep = 2
+    cout = 0
+    parent_node_key = create_parent_node(G, movie_link ,soup)
+
+   
 
     movies_visited = []
     get_info(G, soup, rows_deep, count, movies_visited, parent_node_key)
 
+
     return G
+
+def get_hyperlink(movie_name):
+    """
+    Gets the link of the movie being searched for by the user
+    :param movie_name: the movie to be searched for by the user
+    :return: a hyperlink of the top movie that the user is searching for
+    """
+    # need to fix exit code later
+
+    #
+    try:
+        # user_movie = "acyeiouncu"
+        temp_r = requests.get("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + movie_name + "&s=all")
+        temp_soup = BeautifulSoup(temp_r.content, "lxml")
+
+        # in case the movie is not found right away it will look through all
+        # the sections of the movie searched page and then look for the tt code once
+        # in the right section of the page
+        for item in temp_soup.find_all("div", class_="findSection"):
+            link = item.find("a")
+            link = link.get("name")
+
+            if(link == "tt"):
+                link = item.find("td", class_="result_text")
+                link = link.find('a')
+                link = link.get("href")
+                link = "http://www.imdb.com" + link
+
+                print(link)
+                return link
+
+    except:
+        # if the movie can not be found
+        print("Error : Movie(" + movie_name + ") was not found.")
+        exit(0)
 '''
 if __name__ == "__main__":
-    scraper()
+    scraper(hyperlink)
 '''
-
-
 
 
 
