@@ -14,12 +14,13 @@ def build_network(hyperlink):
     """
     shells = []
 
+
     G = scraper.scraper(hyperlink, shells)
 
     pos = nx.shell_layout(G, shells)
+
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}
 
-    # creating the edges
     edge_trace = Scatter(
         x=[],
         y=[],
@@ -31,7 +32,6 @@ def build_network(hyperlink):
     xvalues = []
     yvalues = []
 
-    # drawing the edges
     for edge in G.edges():  # [(node1, node2), (node3, node4),...]
         x0, y0 = pos[edge[0]]  # pos = { nodeID : [x, y], nodeID : [x, y], ...}
         x1, y1 = pos[edge[1]]
@@ -42,16 +42,16 @@ def build_network(hyperlink):
         edge_trace['x'] += [x0, x1, None]  # adding x and y to scatter plot
         edge_trace['y'] += [y0, y1, None]
 
-    # setting up node drawing
     node_trace = Scatter(
         x=[],
         y=[],
         text=[],
-        textposition='bottom',
-        mode='markers+text',
+        mode='markers',
         marker=Marker(
+
             showscale=True,
             colorscale='Rainbow',
+
             reversescale=True,
             color=[],
             size=[],
@@ -60,8 +60,8 @@ def build_network(hyperlink):
             line=dict(width=2))
     )
 
-    # drawing the nodes
     node_text = []
+
     for node in G.nodes():
         x, y = pos[node]
         node_trace['x'].append(x)
@@ -87,6 +87,7 @@ def build_network(hyperlink):
 
 
     # setting up the figure
+
     fig = Figure(
         data=[edge_trace, node_trace],
         layout=Layout(
@@ -107,6 +108,7 @@ def main():
     """
     app = dash.Dash()
 
+
     app.layout = html.Div([
         html.Div(id='target'),  # div that shows output
         dcc.Input(id='input', type='text', value=''),
@@ -126,7 +128,7 @@ def main():
                                     # State('connecting element', value collected)
         [Event('submit', 'click')])  #connected to the html.Button, callback triggered on action
                                      # Event('connecting_id', action)
-    def make_map(hyperlink):  # state variable is the 'value' property from the State in the decorator
+    def make_map(hyperlink): #state variable is the 'value' property from the State in the decorator
         return build_network(hyperlink)
 
     app.run_server(debug=False)
