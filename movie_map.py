@@ -50,7 +50,7 @@ def build_network(hyperlink):
         mode='markers+text',
         marker=Marker(
             showscale=True,
-            colorscale='Viridis',
+            colorscale='Rainbow',
             reversescale=False,
             color=[],
             line=dict(width=2))
