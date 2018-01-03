@@ -46,9 +46,13 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
         votes = int(temp[temp.find('(') + 1:temp.find(' ', temp.find('('))].replace(',', ''))
 
         # gets the short description of the movie
-        synopsis = links.find("div", class_="rec-outline")
-        synopsis = synopsis.find("p")
-        synopsis = synopsis.string.replace("\n", "")
+        try:
+            synopsis = links.find("div", class_="rec-outline")
+            synopsis = synopsis.find("p")
+            synopsis = synopsis.string.replace("\n", "")
+        except Exception as e:
+            print(e)
+            synopsis = "Error reading synopsis."
         # print(synopsis.text)
 
         #adds information to a dictionary
@@ -153,7 +157,7 @@ def scraper(hyperlink):
 
     r = requests.get(movie_link)
     soup = BeautifulSoup(r.content, "lxml")
-    rows_deep = 2
+    rows_deep = 5
     count = 0
 
     #  need to create a parent node

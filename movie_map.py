@@ -15,7 +15,7 @@ def build_network(hyperlink):
 
     G = scraper.scraper(hyperlink)
 
-    pos = nx.spring_layout(G)
+    pos = nx.spring_layout(G, k=.12)
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}
 
     # creating the edges
