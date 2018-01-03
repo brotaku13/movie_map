@@ -12,10 +12,11 @@ def build_network(hyperlink):
     :param hyperlink: a hyperlink to an IMDB title
     :return: a graph to connect to the dcc.Graph
     """
+    shells = []
 
-    G = scraper.scraper(hyperlink)
+    G = scraper.scraper(hyperlink, shells)
 
-    pos = nx.spring_layout(G, k=.12)
+    pos = nx.shell_layout(G, shells)
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}
 
     # creating the edges
@@ -51,8 +52,11 @@ def build_network(hyperlink):
         marker=Marker(
             showscale=True,
             colorscale='Rainbow',
-            reversescale=False,
+            reversescale=True,
             color=[],
+            size=[],
+            sizeref=1,
+            #sizemode='area',
             line=dict(width=2))
     )
 
@@ -62,12 +66,25 @@ def build_network(hyperlink):
         x, y = pos[node]
         node_trace['x'].append(x)
         node_trace['y'].append(y)
+
         node_text.append(G.node[node]['title'])
+
+        node_trace['marker']['size'].append(len(G[node]))
+
+        node_trace['marker']['color'].append(G._node[node]['rating'])
+
+    node_trace['marker']['sizeref'] = max(node_trace['marker']['size']) / 50
+
     node_trace['text'] = node_text
 
     # resizing and nodes based on number of connections
+    '''
     for node, adjacencies in enumerate(G.adjacency()):
         node_trace['marker']['color'].append(len(adjacencies[1]))
+    '''
+
+
+
 
     # setting up the figure
     fig = Figure(

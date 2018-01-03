@@ -4,7 +4,7 @@ import networkx as nx
 import time
 import string
 
-def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
+def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shells):
     '''
     This is the recursive function that goes into the different movies. it gets called on each movie.
     :param G: A graph object.
@@ -100,6 +100,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
 
         # build node
         G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2], synopsis=movie_specs[3])
+
         # attach node to graph
         G.add_edge(parent_node, movie_specs[1])
 
@@ -145,7 +146,7 @@ def create_parent_node(G, soup):
     return tt_code
 
 # keep for testing:
-def scraper(hyperlink):
+def scraper(hyperlink, shells):
     G = nx.Graph()
 
     # replaces the user entered spaces for + so that the movie can be searched for in imdb
@@ -157,7 +158,7 @@ def scraper(hyperlink):
 
     r = requests.get(movie_link)
     soup = BeautifulSoup(r.content, "lxml")
-    rows_deep = 5
+    rows_deep = 3
     count = 0
 
     #  need to create a parent node
@@ -165,8 +166,11 @@ def scraper(hyperlink):
 
     parent_node_key = create_parent_node(G, soup)
 
+    shells.append([parent_node_key])
+
     movies_visited = []
-    get_info(G, soup, rows_deep, count, movies_visited, parent_node_key)
+
+    get_info(G, soup, rows_deep, count, movies_visited, parent_node_key, shells)
 
 
     return G
