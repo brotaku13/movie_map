@@ -95,28 +95,44 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
         # call recursive function
         get_info(G, movie, rows_deep, count, movies_visited, movie_specs[1])  # passing in the tt_code as the parent_node
 
-def create_parent_node(G, soup):
+
+def create_parent_node(G, hyperlink, soup):
     '''
     This finds and creates the central, parent node and associates it with the graph
     :param G: networkx Graph object
     :param soup: beautiful_soup object
     :return: node_key (str)
     '''
+    
+    node_key = hyperlink.split('/')[4]
+
+    keyword = '/title/{}/ratings?ref_=tt_ov_rt'.format(id)
+ 
+    votesTag = soup.find("a",{"href":keyword})
+    votes = int(voteTag.text.replace(',',''))
+
+    imdb_scoreTag = voteTag.parent.contents[1]
+    imdb_score = float(imdb_scoreTag.text.split('/')[0])
+    
+
+    title = soup.find("div", {"class":"title_wrapper"}).contents[1].text
+
     # insert actual web scraping for parent node
-    G.add_node('tt3501632', title='Top Gun', votes=123456, imdb_score=7.9)
-    return 'tt3501632'
+    G.add_node(node_key, title, votes, imdb_score)
+    return node_key
 
 # keep for testing:
 def scraper():
     G = nx.Graph()
-    r = requests.get("http://www.imdb.com/title/tt1632708/?ref_=nv_sr_1")
+    hyeprlink = "http://www.imdb.com/title/tt1632708/?ref_=nv_sr_1"
+    r = requests.get(hyperlink)
     soup = BeautifulSoup(r.content, "lxml")
     rows_deep = 4
     count = 0
 
     #  need to create a parent node
     #  Node(tt028365, 'title': 'original_title', 'votes', 123445, 'score', 7.0)
-    parent_node_key = create_parent_node(G, soup)
+    parent_node_key = create_parent_node(G, hyperlink ,soup)
 
     movies_visited = []
     get_info(G, soup, rows_deep, count, movies_visited, parent_node_key)
