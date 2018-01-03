@@ -109,26 +109,34 @@ def create_parent_node(G, soup):
     :param soup: beautiful_soup object
     :return: node_key (str)
     '''
-    # insert actual web scraping for parent node
+
+    # gets where most of the information is stored
     parent_info = soup.find("div", class_="imdbRating")
+
+    # gets the rating of the searched movie
     rating = parent_info.find("span", itemprop="ratingValue")
     print(rating.text)
 
+    # gets the tt code of the movie
     tt_code = parent_info.find("a")
     tt_code = tt_code.get("href").split('/')[2]
     print(tt_code)
 
+    # ges the rating count of the movie
     rating_count = parent_info.find("span", class_="small")
     print(rating_count.text)
 
+    # gets the original title of the movie
     original_title = soup.find("div", class_="title_wrapper")
     original_title = original_title.find("h1")
     print(original_title.text)
 
+    # gets the basic description of the movie
     summary_text = soup.find("div", class_="summary_text")
     summary_text = summary_text.string.replace("\n", "")
     print(summary_text)
 
+    # creates the parent node for the graph and returns the tt code of the movie
     G.add_node(tt_code, title=original_title.text, votes=rating_count.text, imdb_score=rating.text, synopsis=summary_text)
     return tt_code
 
@@ -136,8 +144,10 @@ def create_parent_node(G, soup):
 def scraper(hyperlink):
     G = nx.Graph()
 
+    # replaces the user entered spaces for + so that the movie can be searched for in imdb
     user_movie = hyperlink.replace(" ", "+")
 
+    # gest the link of the movie
     print(user_movie)
     movie_link = get_hyperlink(user_movie)
 
@@ -158,12 +168,22 @@ def scraper(hyperlink):
     return G
 
 def get_hyperlink(movie_name):
+    """
+    Gets the link of the movie being searched for by the user
+    :param movie_name: the movie to be searched for by the user
+    :return: a hyperlink of the top movie that the user is searching for
+    """
     # need to fix exit code later
+
+    #
     try:
         # user_movie = "acyeiouncu"
         temp_r = requests.get("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + movie_name + "&s=all")
         temp_soup = BeautifulSoup(temp_r.content, "lxml")
 
+        # in case the movie is not found right away it will look through all
+        # the sections of the movie searched page and then look for the tt code once
+        # in the right section of the page
         for item in temp_soup.find_all("div", class_="findSection"):
             link = item.find("a")
             link = link.get("name")
@@ -178,6 +198,7 @@ def get_hyperlink(movie_name):
                 return link
 
     except:
+        # if the movie can not be found
         print("Error : Movie(" + movie_name + ") was not found.")
         exit(0)
 '''
