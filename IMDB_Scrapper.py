@@ -45,8 +45,14 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
         # finds number between parentheses, replaces the ',' with '' and then turns the number into an int
         votes = int(temp[temp.find('(') + 1:temp.find(' ', temp.find('('))].replace(',', ''))
 
+        # gets the short description of the movie
+        synopsis = links.find("div", class_="rec-outline")
+        synopsis = synopsis.find("p")
+        synopsis = synopsis.string.replace("\n", "")
+        # print(synopsis.text)
+
         #adds information to a dictionary
-        movies[votes] = [title, tt_code, rating]
+        movies[votes] = [title, tt_code, rating, synopsis]
 
     sorted_movies = sorted(movies)  # sorts movies, returns list of movie keys in sorted order
 
@@ -89,7 +95,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node):
             print('visiting {}'.format(movie_specs))
 
         # build node
-        G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2])
+        G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2], synopsis=movie_specs[3])
         # attach node to graph
         G.add_edge(parent_node, movie_specs[1])
 
@@ -104,15 +110,34 @@ def create_parent_node(G, soup):
     :return: node_key (str)
     '''
     # insert actual web scraping for parent node
-    G.add_node('tt3501632', title='Top Gun', votes=123456, imdb_score=7.9)
-    return 'tt3501632'
+    parent_info = soup.find("div", class_="imdbRating")
+    rating = parent_info.find("span", itemprop="ratingValue")
+    print(rating.text)
+
+    tt_code = parent_info.find("a")
+    tt_code = tt_code.get("href").split('/')[2]
+    print(tt_code)
+
+    rating_count = parent_info.find("span", class_="small")
+    print(rating_count.text)
+
+    original_title = soup.find("div", class_="title_wrapper")
+    original_title = original_title.find("h1")
+    print(original_title.text)
+
+    summary_text = soup.find("div", class_="summary_text")
+    summary_text = summary_text.string.replace("\n", "")
+    print(summary_text)
+
+    G.add_node(tt_code, title=original_title.text, votes=rating_count.text, imdb_score=rating.text, synopsis=summary_text)
+    return tt_code
 
 # keep for testing:
 def scraper(hyperlink):
     G = nx.Graph()
 
     user_movie = hyperlink.replace(" ", "+")
-    temp_movie = "iron+man"
+
     print(user_movie)
     movie_link = get_hyperlink(user_movie)
 
@@ -123,8 +148,7 @@ def scraper(hyperlink):
 
     #  need to create a parent node
     #  Node(tt028365, 'title': 'original_title', 'votes', 123445, 'score', 7.0)
-    user_movie = "iron+man"
-    get_hyperlink(user_movie)
+
     parent_node_key = create_parent_node(G, soup)
 
     movies_visited = []
@@ -140,15 +164,21 @@ def get_hyperlink(movie_name):
         temp_r = requests.get("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + movie_name + "&s=all")
         temp_soup = BeautifulSoup(temp_r.content, "lxml")
 
-        link = temp_soup.find("td", class_="result_text")
-        link = link.find('a')
-        link = link.get("href")
-        link = "http://www.imdb.com" + link
-        print(link)
-        return link
+        for item in temp_soup.find_all("div", class_="findSection"):
+            link = item.find("a")
+            link = link.get("name")
+
+            if(link == "tt"):
+                link = item.find("td", class_="result_text")
+                link = link.find('a')
+                link = link.get("href")
+                link = "http://www.imdb.com" + link
+
+                print(link)
+                return link
 
     except:
-        print("Error : Movie was not found.")
+        print("Error : Movie(" + movie_name + ") was not found.")
         exit(0)
 '''
 if __name__ == "__main__":
