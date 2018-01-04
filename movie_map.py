@@ -16,7 +16,7 @@ def build_network(hyperlink):
 
     G = scraper.scraper(hyperlink, shells)
     print(shells)
-    pos = nx.shell_layout(G, shells)
+    pos = nx.shell_layout(G, nlist=shells, scale=0.5)
 
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}
 
@@ -46,11 +46,27 @@ def build_network(hyperlink):
         y=[],
         text=[],
         textposition='bottom',
+        textfont=dict(
+            color='rgb(255, 255, 255)'
+        ),
         mode='markers+text',
         marker=Marker(
             showscale=True,
-            colorscale='Rainbow',
-            reversescale=True,
+            colorscale=[[0.0, 'rgb(221, 34, 49)'],
+                        [0.1111111111111111, 'rgb(218, 58, 30)'],
+                        [0.2222222222222222, 'rgb(215, 99, 26)'],
+                        [0.3333333333333333, 'rgb(212, 139, 22)'],
+                        [0.4444444444444444, 'rgb(209, 180, 19)'],
+                        [0.5555555555555556, 'rgb(189, 206, 15)'],
+                        [0.6666666666666666, 'rgb(142, 203, 12)'],
+                        [0.7777777777777778, 'rgb(94, 200, 9)'],
+                        [0.8888888888888888, 'rgb(2, 194, 6)'],
+                        [1.0, 'rgb(0, 245, 7)']],
+            reversescale=False,
+            colorbar=dict(
+                title='IMDB Rating',
+                titleside='top',
+            ),
             color=[],
             size=[],
             sizeref=1,
@@ -77,6 +93,8 @@ def build_network(hyperlink):
         layout=Layout(
             titlefont=dict(size=16),
             showlegend=False,
+            plot_bgcolor='rgb(0,0,0)',
+            paper_bgcolor='rgb(0,0,0)',
             hovermode='closest',
             margin={'l': 0, 'r': 0, 't': 10, 'b': 0, 'pad': 0},
             xaxis=XAxis(showgrid=False, zeroline=False, showticklabels=False),
@@ -93,7 +111,7 @@ def main():
     app = dash.Dash()
 
 
-    app.layout = html.Div([
+    app.layout = html.Div(style={'backgroundColor': 'rgb(0,0,0)'}, children=[
         html.Div(id='target'),  # div that shows output
         dcc.Input(id='input', type='text', value=''),
         html.Button(id='submit', type='submit', children='ok'),

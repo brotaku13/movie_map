@@ -33,12 +33,18 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
         tt_code_list.append(tt_code)
 
         # find title
-        title = link.next_element['alt']
+        try:
+            title = link.next_element['alt']
+        except TypeError:
+            title = 'Error Retrieving Title'
+        print('currently scraping:', title)
 
         # find rating
         div = links.find('div', class_='rating rating-list')
-        rating = float(div.attrs['id'].split('|')[2])
-
+        try:
+            rating = float(div.attrs['id'].split('|')[2])
+        except KeyError:
+            rating = 5.0
         # find votes
         temp = div.attrs['title']
 
@@ -51,7 +57,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
             synopsis = synopsis.find("p")
             synopsis = synopsis.string.replace("\n", "")
         except Exception as e:
-            print(e)
+            print(e, 'movie = {}, tt_code = {}'.format(title, tt_code))
             synopsis = "Error reading synopsis."
         # print(synopsis.text)
 
@@ -110,7 +116,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
         get_info(G, movie, rows_deep, count, movies_visited, movie_specs[1], shells)  # passing in the tt_code as the parent_node
 
 
-def create_parent_node(G, soup):
+def create_parent_node(G, soup, movies_visited):
     '''
        This finds and creates the central, parent node and associates it with the graph
        :param G: networkx Graph object
@@ -146,6 +152,9 @@ def create_parent_node(G, soup):
 
     # creates the parent node for the graph and returns the tt code of the movie
     G.add_node(tt_code, title=original_title.text, votes=rating_count.text, rating=float(rating.text), synopsis=summary_text)
+
+    movies_visited.append(tt_code)
+
     return tt_code
 
 
@@ -155,6 +164,7 @@ def scraper(hyperlink, shells):
 
     G = nx.Graph()
 
+    movies_visited = []
     # replaces the user entered spaces for + so that the movie can be searched for in imdb
     user_movie = hyperlink.replace(" ", "+")
 
@@ -174,11 +184,11 @@ def scraper(hyperlink, shells):
 
     #  need to create a parent node
     #  Node(tt028365, 'title': 'original_title', 'votes', 123445, 'score', 7.0)
-    parent_node_key = create_parent_node(G, soup)
+    parent_node_key = create_parent_node(G, soup, movies_visited)
 
     shells[0].append(parent_node_key)
 
-    movies_visited = []
+
 
     get_info(G, soup, rows_deep, count, movies_visited, parent_node_key, shells)
 
