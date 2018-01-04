@@ -166,7 +166,7 @@ def scraper(hyperlink, shells):
     soup = BeautifulSoup(r.content, "lxml")
 
     # number of recursive levels
-    rows_deep = 3
+    rows_deep = 5
     count = 0
 
     for i in range(rows_deep + 1):

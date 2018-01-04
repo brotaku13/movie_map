@@ -45,45 +45,30 @@ def build_network(hyperlink):
         x=[],
         y=[],
         text=[],
-        mode='markers',
+        textposition='bottom',
+        mode='markers+text',
         marker=Marker(
-
             showscale=True,
             colorscale='Rainbow',
-
             reversescale=True,
             color=[],
             size=[],
             sizeref=1,
-            #sizemode='area',
             line=dict(width=2))
     )
-
-    node_text = []
 
     for node in G.nodes():
         x, y = pos[node]
         node_trace['x'].append(x)
         node_trace['y'].append(y)
 
-        node_text.append(G.node[node]['title'])
+        node_trace['text'].append(G._node[node]['title'])
 
         node_trace['marker']['size'].append(len(G[node]))
 
         node_trace['marker']['color'].append(G._node[node]['rating'])
 
     node_trace['marker']['sizeref'] = max(node_trace['marker']['size']) / 50
-
-    node_trace['text'] = node_text
-
-    # resizing and nodes based on number of connections
-    '''
-    for node, adjacencies in enumerate(G.adjacency()):
-        node_trace['marker']['color'].append(len(adjacencies[1]))
-    '''
-
-
-
 
     # setting up the figure
 
