@@ -1,8 +1,6 @@
 from bs4 import BeautifulSoup
 import requests
 import networkx as nx
-import time
-import string
 
 def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shells):
     '''
@@ -13,6 +11,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
     :param count: the number of rows deep already visited.
     :param movies_visited: a list object of movie's tt_codes that have already been visited so that they are not visited again.
     :param parent_node: the parent node to the movies being visited. part of the Graph Object.
+    :param shells: a list of lists where each sublist is a list of nodes at that concentric level. used to graph in the shell_layout
     :return: void. this function builds the graph object.
     '''
 
@@ -37,7 +36,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
             title = link.next_element['alt']
         except TypeError:
             title = 'Error Retrieving Title'
-        print('currently scraping:', title)
+        print('currently scraping:', title)  # logging
 
         # find rating
         div = links.find('div', class_='rating rating-list')
@@ -107,7 +106,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
         # build node
         G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2], synopsis=movie_specs[3])
 
-        shells[count].append(movie_specs[1])
+        shells[count].append(movie_specs[1]) # add the node to the current level of the graph's shell
 
         # attach node to graph
         G.add_edge(parent_node, movie_specs[1])
@@ -121,6 +120,7 @@ def create_parent_node(G, soup, movies_visited):
        This finds and creates the central, parent node and associates it with the graph
        :param G: networkx Graph object
        :param soup: beautiful_soup object
+       :param movies_visited: a list of movies that have already been visited
        :return: node_key (str)
        '''
 
@@ -147,7 +147,10 @@ def create_parent_node(G, soup, movies_visited):
 
     # gets the basic description of the movie
     summary_text = soup.find("div", class_="summary_text")
-    summary_text = summary_text.string.replace("\n", "")
+    try:
+        summary_text = summary_text.string.replace("\n", "")
+    except AttributeError:
+        summary_text = 'Error Retrieving Information'
     print(summary_text)
 
     # creates the parent node for the graph and returns the tt code of the movie
@@ -158,42 +161,42 @@ def create_parent_node(G, soup, movies_visited):
     return tt_code
 
 
-# keep for testing:
-
 def scraper(hyperlink, shells):
 
     G = nx.Graph()
 
     movies_visited = []
+
     # replaces the user entered spaces for + so that the movie can be searched for in imdb
     user_movie = hyperlink.replace(" ", "+")
 
-    # gest the link of the movie
+    # get the link of the movie
     print(user_movie)
     movie_link = get_hyperlink(user_movie)
     
     r = requests.get(movie_link)
     soup = BeautifulSoup(r.content, "lxml")
 
-    # number of recursive levels
-    rows_deep = 5
+    # number of recursive levels. change this to creat larger or smaller graphs
+    rows_deep = 3
+
     count = 0
 
+    # initialize the shell list with the number of sublists needed
     for i in range(rows_deep + 1):
         shells.append([])
 
-    #  need to create a parent node
-    #  Node(tt028365, 'title': 'original_title', 'votes', 123445, 'score', 7.0)
+    # parent node key is a tt_code (str)
     parent_node_key = create_parent_node(G, soup, movies_visited)
 
+    # set the origin node for the graph layout
     shells[0].append(parent_node_key)
 
-
-
+    # call recursive function
     get_info(G, soup, rows_deep, count, movies_visited, parent_node_key, shells)
 
-
     return G
+
 
 def get_hyperlink(movie_name):
     """
@@ -201,11 +204,9 @@ def get_hyperlink(movie_name):
     :param movie_name: the movie to be searched for by the user
     :return: a hyperlink of the top movie that the user is searching for
     """
-    # need to fix exit code later
 
-    #
     try:
-        # user_movie = "acyeiouncu"
+
         temp_r = requests.get("http://www.imdb.com/find?ref_=nv_sr_fn&q=" + movie_name + "&s=all")
         temp_soup = BeautifulSoup(temp_r.content, "lxml")
 
@@ -229,10 +230,7 @@ def get_hyperlink(movie_name):
         # if the movie can not be found
         print("Error : Movie(" + movie_name + ") was not found.")
         exit(0)
-'''
-if __name__ == "__main__":
-    scraper(hyperlink)
-'''
+
 
 
 

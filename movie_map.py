@@ -6,20 +6,25 @@ from plotly.graph_objs import *
 import networkx as nx
 import IMDB_Scrapper as scraper
 
-def build_network(hyperlink):
+def build_network(movie_title):
     """
     Builds the network graph. will eventually be comprised of the web scraping tools.
     :param hyperlink: a hyperlink to an IMDB title
     :return: a graph to connect to the dcc.Graph
     """
+    #create the shells list for the shell_layout
     shells = []
 
-    G = scraper.scraper(hyperlink, shells)
-    print(shells)
-    pos = nx.shell_layout(G, nlist=shells, scale=0.5)
+    # create the networkx Graph recursively by web scraping IMDB
+    G = scraper.scraper(movie_title, shells)
 
+    print(shells) # logging
+
+    # creat a dictionary of x,y positions by node
+    pos = nx.shell_layout(G, nlist=shells, scale=0.5)
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}
 
+    # initializing and styling the edges for plotting
     edge_trace = Scatter(
         x=[],
         y=[],
@@ -31,6 +36,7 @@ def build_network(hyperlink):
     xvalues = []
     yvalues = []
 
+    # getting the x, y information from each node and graphing the edges
     for edge in G.edges():  # [(node1, node2), (node3, node4),...]
         x0, y0 = pos[edge[0]]  # pos = { nodeID : [x, y], nodeID : [x, y], ...}
         x1, y1 = pos[edge[1]]
@@ -41,6 +47,7 @@ def build_network(hyperlink):
         edge_trace['x'] += [x0, x1, None]  # adding x and y to scatter plot
         edge_trace['y'] += [y0, y1, None]
 
+    # initializing and styling the scatter plot which will map the nodes.
     node_trace = Scatter(
         x=[],
         y=[],
@@ -73,6 +80,7 @@ def build_network(hyperlink):
             line=dict(width=2))
     )
 
+    # setting marker information on scatter plot from the networkx Graph object
     for node in G.nodes():
         x, y = pos[node]
         node_trace['x'].append(x)
@@ -84,10 +92,10 @@ def build_network(hyperlink):
 
         node_trace['marker']['color'].append(G._node[node]['rating'])
 
+    # sizing the nodes
     node_trace['marker']['sizeref'] = max(node_trace['marker']['size']) / 50
 
-    # setting up the figure
-
+    # initializing and styling the figure
     fig = Figure(
         data=[edge_trace, node_trace],
         layout=Layout(
@@ -103,14 +111,15 @@ def build_network(hyperlink):
     )
     return fig
 
+
 def main():
     """
-    Main program: responsible for setting up html divs and app
-    :return:
+    responsible for setting up html divs and app
+    :return: void
     """
     app = dash.Dash()
 
-
+    # initializing and styling Dash App components
     app.layout = html.Div(style={'backgroundColor': 'rgb(0,0,0)'}, children=[
         html.Div(id='target'),  # div that shows output
         dcc.Input(id='input', type='text', value=''),
@@ -134,6 +143,7 @@ def main():
         return build_network(hyperlink)
 
     app.run_server(debug=False)
+
 
 if __name__ == '__main__':
     main()
