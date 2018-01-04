@@ -14,9 +14,8 @@ def build_network(hyperlink):
     """
     shells = []
 
-
     G = scraper.scraper(hyperlink, shells)
-
+    print(shells)
     pos = nx.shell_layout(G, shells)
 
     #  pos is a dictionary { nodeNumber : ([x, y]), ...}

@@ -101,11 +101,13 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
         # build node
         G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2], synopsis=movie_specs[3])
 
+        shells[count].append(movie_specs[1])
+
         # attach node to graph
         G.add_edge(parent_node, movie_specs[1])
 
         # call recursive function
-        get_info(G, movie, rows_deep, count, movies_visited, movie_specs[1])  # passing in the tt_code as the parent_node
+        get_info(G, movie, rows_deep, count, movies_visited, movie_specs[1], shells)  # passing in the tt_code as the parent_node
 
 
 def create_parent_node(G, soup):
@@ -143,7 +145,7 @@ def create_parent_node(G, soup):
     print(summary_text)
 
     # creates the parent node for the graph and returns the tt code of the movie
-    G.add_node(tt_code, title=original_title.text, votes=rating_count.text, imdb_score=rating.text, synopsis=summary_text)
+    G.add_node(tt_code, title=original_title.text, votes=rating_count.text, rating=float(rating.text), synopsis=summary_text)
     return tt_code
 
 
@@ -163,14 +165,18 @@ def scraper(hyperlink, shells):
     r = requests.get(movie_link)
     soup = BeautifulSoup(r.content, "lxml")
 
+    # number of recursive levels
     rows_deep = 3
     count = 0
+
+    for i in range(rows_deep + 1):
+        shells.append([])
 
     #  need to create a parent node
     #  Node(tt028365, 'title': 'original_title', 'votes', 123445, 'score', 7.0)
     parent_node_key = create_parent_node(G, soup)
 
-    shells.append([parent_node_key])
+    shells[0].append(parent_node_key)
 
     movies_visited = []
 
