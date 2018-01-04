@@ -108,30 +108,43 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
         get_info(G, movie, rows_deep, count, movies_visited, movie_specs[1])  # passing in the tt_code as the parent_node
 
 
-def create_parent_node(G, movie_link, soup):
+def create_parent_node(G, soup):
     '''
-    This finds and creates the central, parent node and associates it with the graph
-    :param G: networkx Graph object
-    :param soup: beautiful_soup object
-    :return: node_key (str)
-    '''
-    
-    node_key = movie_link.split('/')[4]
+       This finds and creates the central, parent node and associates it with the graph
+       :param G: networkx Graph object
+       :param soup: beautiful_soup object
+       :return: node_key (str)
+       '''
 
-    keyword = '/title/{}/ratings?ref_=tt_ov_rt'.format(id)
- 
-    votesTag = soup.find("a",{"href":keyword})
-    votes = int(votesTag.text.replace(',',''))
+    # gets where most of the information is stored
+    parent_info = soup.find("div", class_="imdbRating")
 
-    imdb_scoreTag = votesTag.parent.contents[1]
-    imdb_score = float(imdb_scoreTag.text.split('/')[0])
-    
+    # gets the rating of the searched movie
+    rating = parent_info.find("span", itemprop="ratingValue")
+    print(rating.text)
 
-    title = soup.find("div", {"class":"title_wrapper"}).contents[1].text
+    # gets the tt code of the movie
+    tt_code = parent_info.find("a")
+    tt_code = tt_code.get("href").split('/')[2]
+    print(tt_code)
 
-    # insert actual web scraping for parent node
-    G.add_node(node_key, title, votes, imdb_score)
-    return node_key
+    # ges the rating count of the movie
+    rating_count = parent_info.find("span", class_="small")
+    print(rating_count.text)
+
+    # gets the original title of the movie
+    original_title = soup.find("div", class_="title_wrapper")
+    original_title = original_title.find("h1")
+    print(original_title.text)
+
+    # gets the basic description of the movie
+    summary_text = soup.find("div", class_="summary_text")
+    summary_text = summary_text.string.replace("\n", "")
+    print(summary_text)
+
+    # creates the parent node for the graph and returns the tt code of the movie
+    G.add_node(tt_code, title=original_title.text, votes=rating_count.text, imdb_score=rating.text, synopsis=summary_text)
+    return tt_code
 
 
 # keep for testing:
@@ -155,7 +168,7 @@ def scraper(hyperlink, shells):
 
     #  need to create a parent node
     #  Node(tt028365, 'title': 'original_title', 'votes', 123445, 'score', 7.0)
-    parent_node_key = create_parent_node(G, movie_link ,soup)
+    parent_node_key = create_parent_node(G, soup)
 
     shells.append([parent_node_key])
 
