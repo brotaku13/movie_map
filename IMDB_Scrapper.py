@@ -22,46 +22,50 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
     movies = {}
     tt_code_list = []
 
-    for links in movie_link.find_all("div", class_="rec_overview"):
-        # find link
-        link = links.find('a')  # relative hyperlink
+    try:
+        for links in movie_link.find_all("div", class_="rec_overview"):
+            # find link
+            link = links.find('a')  # relative hyperlink
 
-        # get ttcode
-        tt_code = link.get('href').split('/')[2]
-        #creates list of all ttCode of recommended movies
-        tt_code_list.append(tt_code)
+            # get ttcode
+            tt_code = link.get('href').split('/')[2]
+            #creates list of all ttCode of recommended movies
+            tt_code_list.append(tt_code)
 
-        # find title
-        try:
-            title = link.next_element['alt']
-        except TypeError:
-            title = 'Error Retrieving Title'
-        print('currently scraping:', title)  # logging
+            # find title
+            try:
+                title = link.next_element['alt']
+            except TypeError:
+                title = 'Error Retrieving Title'
+            print('currently scraping:', title)  # logging
 
-        # find rating
-        div = links.find('div', class_='rating rating-list')
-        try:
-            rating = float(div.attrs['id'].split('|')[2])
-        except KeyError:
-            rating = 5.0
-        # find votes
-        temp = div.attrs['title']
+            # find rating
+            div = links.find('div', class_='rating rating-list')
+            try:
+                rating = float(div.attrs['id'].split('|')[2])
+            except KeyError:
+                rating = 5.0
+            # find votes
+            temp = div.attrs['title']
 
-        # finds number between parentheses, replaces the ',' with '' and then turns the number into an int
-        votes = int(temp[temp.find('(') + 1:temp.find(' ', temp.find('('))].replace(',', ''))
+            # finds number between parentheses, replaces the ',' with '' and then turns the number into an int
+            votes = int(temp[temp.find('(') + 1:temp.find(' ', temp.find('('))].replace(',', ''))
 
-        # gets the short description of the movie
-        try:
-            synopsis = links.find("div", class_="rec-outline")
-            synopsis = synopsis.find("p")
-            synopsis = synopsis.string.replace("\n", "")
-        except Exception as e:
-            print(e, 'movie = {}, tt_code = {}'.format(title, tt_code))
-            synopsis = "Error reading synopsis."
-        # print(synopsis.text)
+            # gets the short description of the movie
+            try:
+                synopsis = links.find("div", class_="rec-outline")
+                synopsis = synopsis.find("p")
+                synopsis = synopsis.string.replace("\n", "")
+            except Exception as e:
+                print(e, 'movie = {}, tt_code = {}'.format(title, tt_code))
+                synopsis = "Error reading synopsis."
+            # print(synopsis.text)
 
-        #adds information to a dictionary
-        movies[votes] = [title, tt_code, rating, synopsis]
+            #adds information to a dictionary
+            movies[votes] = [title, tt_code, rating, synopsis]
+
+    except:
+        print("Error: Unable to find recommended movies.")
 
     sorted_movies = sorted(movies)  # sorts movies, returns list of movie keys in sorted order
 
@@ -125,36 +129,57 @@ def create_parent_node(G, soup, movies_visited):
        '''
 
     # gets where most of the information is stored
-    parent_info = soup.find("div", class_="imdbRating")
+    try:
+        parent_info = soup.find("div", class_="imdbRating")
+
+    except:
+        print("Error: No imdbRating.")
 
     # gets the rating of the searched movie
-    rating = parent_info.find("span", itemprop="ratingValue")
-    print(rating.text)
+    try:
+        rating = parent_info.find("span", itemprop="ratingValue").text
+
+    except:
+        print("Error: Unable to get rating.")
+        rating = 0
 
     # gets the tt code of the movie
-    tt_code = parent_info.find("a")
-    tt_code = tt_code.get("href").split('/')[2]
-    print(tt_code)
+    try:
+        tt_code = parent_info.find("a").get("href").split('/')[2]
+
+    except:
+        print("Error: Unable to get tt_code.")
+        tt_code = "N/A"
 
     # ges the rating count of the movie
-    rating_count = parent_info.find("span", class_="small")
-    print(rating_count.text)
+    try:
+        rating_count = parent_info.find("span", class_="small").text
+
+    except:
+        print("Error: Unable to get rating count.")
+        rating_count = 0
 
     # gets the original title of the movie
-    original_title = soup.find("div", class_="title_wrapper")
-    original_title = original_title.find("h1")
-    print(original_title.text)
+    try:
+        original_title = soup.find("div", class_="title_wrapper").find("h1").text
+
+    except:
+        print("Error: Unable to get original title.")
+        original_title = "N/A"
 
     # gets the basic description of the movie
     summary_text = soup.find("div", class_="summary_text")
+
     try:
+        summary_text = soup.find("div", class_="summary_text")
         summary_text = summary_text.string.replace("\n", "")
     except AttributeError:
         summary_text = 'Error Retrieving Information'
+
     print(summary_text)
 
     # creates the parent node for the graph and returns the tt code of the movie
-    G.add_node(tt_code, title=original_title.text, votes=rating_count.text, rating=float(rating.text), synopsis=summary_text)
+    G.add_node(tt_code, title=original_title, votes=rating_count, rating=float(rating), synopsis=summary_text)
 
     movies_visited.append(tt_code)
 
@@ -162,41 +187,65 @@ def create_parent_node(G, soup, movies_visited):
 
 
 def scraper(hyperlink, shells):
+    '''
+    This is the backbone of the webscaping. Starts by  creatinga  dummy graph, creating the
+    parent node based off of the user movie input and then calls the recurvsive function to gather the
+    rest of the data based of the recommended movies
+    :param hyperlink: the name of the movie that the user entered
+    :param shells: a list of lists that holds the nodes of the movies
+    :return: by value of the network x graph
+    '''
+    try:
+        G = nx.Graph()
 
-    G = nx.Graph()
+        movies_visited = []
 
-    movies_visited = []
+        # replaces the user entered spaces for + so that the movie can be searched for in imdb
+        user_movie = hyperlink.replace(" ", "+")
 
-    # replaces the user entered spaces for + so that the movie can be searched for in imdb
-    user_movie = hyperlink.replace(" ", "+")
+        # get the link of the movie
+        print(user_movie)
+        movie_link = get_hyperlink(user_movie)
+        print(movie_link)
 
-    # get the link of the movie
-    print(user_movie)
-    movie_link = get_hyperlink(user_movie)
-    
-    r = requests.get(movie_link)
-    soup = BeautifulSoup(r.content, "lxml")
+        r = requests.get(movie_link)
+        soup = BeautifulSoup(r.content, "lxml")
 
-    # number of recursive levels. change this to creat larger or smaller graphs
-    rows_deep = 3
+        # number of recursive levels. change this to creat larger or smaller graphs
+        rows_deep = 2
 
-    count = 0
+        count = 0
 
-    # initialize the shell list with the number of sublists needed
-    for i in range(rows_deep + 1):
-        shells.append([])
+    except:
+        print("Error: Invalid input.")
+        exit(0)
 
-    # parent node key is a tt_code (str)
-    parent_node_key = create_parent_node(G, soup, movies_visited)
+    try:
+        # initialize the shell list with the number of sublists needed
+        for i in range(rows_deep + 1):
+            shells.append([])
 
-    # set the origin node for the graph layout
-    shells[0].append(parent_node_key)
+        # parent node key is a tt_code (str)
+        parent_node_key = create_parent_node(G, soup, movies_visited)
 
-    # call recursive function
-    get_info(G, soup, rows_deep, count, movies_visited, parent_node_key, shells)
+    except:
+        print("Error: Unable to create parent node.")
+        shells[0].append(parent_node_key)
+        return G
 
-    return G
 
+    try:
+        # set the origin node for the graph layout
+        shells[0].append(parent_node_key)
+
+        # call recursive function
+        get_info(G, soup, rows_deep, count, movies_visited, parent_node_key, shells)
+
+        return G
+
+    except:
+        print("Error: In the recursive function.")
+        exit(0)
 
 def get_hyperlink(movie_name):
     """
@@ -218,13 +267,31 @@ def get_hyperlink(movie_name):
             link = link.get("name")
 
             if(link == "tt"):
-                link = item.find("td", class_="result_text")
-                link = link.find('a')
-                link = link.get("href")
-                link = "http://www.imdb.com" + link
+                # finds the title with the most votes and sets that as the user entered movie
+                # a precaution if there are tv shows and other stuff mixed in with movie titles
 
-                print(link)
-                return link
+                all_movies = {}
+                top = 0
+                bad_title_count = 0
+
+                # looks through all the titles in the right section and gets the link with the most votes
+                for movie in item.find_all("td", class_="result_text"):
+                    link = movie.find('a').get("href")
+                    link = "http://www.imdb.com" + link
+                    r = requests.get(link)
+                    soup = BeautifulSoup(r.content, "lxml")
+                    try:
+                        votes = int(soup.find("span", itemprop="ratingCount").string.replace(',', ''))
+                    except:
+                        votes = bad_title_count
+                        bad_title_count += 1
+
+                    all_movies[votes] = link
+
+                    if(top < votes):
+                        top = votes
+
+                return all_movies[top]
 
     except:
         # if the movie can not be found
