@@ -61,8 +61,28 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
                 synopsis = "Error reading synopsis."
             # print(synopsis.text)
 
+            # gets the year of the movie
+            try:
+                date = int(links.find("span", class_="nobr").text.replace('(', '').replace(')', ''))
+
+            except:
+                print("Error: Unable to find release date.")
+                date = 0
+
+            # gest all the recommended directors as a list
+            try:
+                all_rec_director = links.find("div", class_="rec-director rec-ellipsis").text.replace(',', '').split("\n")
+                rec_director = []
+
+                for i in range(2, len(all_rec_director)):
+                    rec_director.append(all_rec_director[i].strip())
+
+            except:
+                print("Error: Unable to find recommended directors.")
+                rec_director = "N/A"
+
             #adds information to a dictionary
-            movies[votes] = [title, tt_code, rating, synopsis]
+            movies[votes] = [title, tt_code, rating, synopsis, date, rec_director]
 
     except:
         print("Error: Unable to find recommended movies.")
@@ -108,7 +128,7 @@ def get_info(G, movie_link, rows_deep, count, movies_visited, parent_node, shell
             print('visiting {}'.format(movie_specs))
 
         # build node
-        G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2], synopsis=movie_specs[3])
+        G.add_node(movie_specs[1], title=movie_specs[0], votes=key, rating=movie_specs[2], synopsis=movie_specs[3], release_date=movie_specs[4], director=movie_specs[5])
 
         shells[count].append(movie_specs[1]) # add the node to the current level of the graph's shell
 
@@ -178,8 +198,28 @@ def create_parent_node(G, soup, movies_visited):
 
     print(summary_text)
 
+    # gets the release date of the movie
+    try:
+        date = soup.find('a', title="See more release dates").text.split(' ')
+        date = int(date[2])
+
+    except:
+        print("Error: Unable to get release date.")
+        date = "N/A"
+
+    # gets the director of the movie. so far i've only seen one director and would need to see a movie with multiple
+    # directors in order to webscrape it
+    parent_director = []
+    try:
+        parent_director.append(soup.find("span", itemprop="director").find('a').text)
+
+    except:
+        print("Error: Unable to find parent director.")
+        parent_director.append("N/A")
+
+
     # creates the parent node for the graph and returns the tt code of the movie
-    G.add_node(tt_code, title=original_title, votes=rating_count, rating=float(rating), synopsis=summary_text)
+    G.add_node(tt_code, title=original_title, votes=rating_count, rating=float(rating), synopsis=summary_text, release_date=date, director=parent_director)
 
     movies_visited.append(tt_code)
 
@@ -212,7 +252,7 @@ def scraper(hyperlink, shells):
         soup = BeautifulSoup(r.content, "lxml")
 
         # number of recursive levels. change this to creat larger or smaller graphs
-        rows_deep = 2
+        rows_deep = 3
 
         count = 0
 
