@@ -337,10 +337,3 @@ def get_hyperlink(movie_name):
         # if the movie can not be found
         print("Error : Movie(" + movie_name + ") was not found.")
         exit(0)
-
-
-
-
-
-
-
